@@ -23,6 +23,7 @@
     "motion": "^12.23.12",
     "next": "15.5.3",
     "ogl": "^1.0.11",
+    "pinata": "^2.5.0",
     "playright": "^0.0.22",
     "playwright-chromium": "^1.55.0",
     "react": "19.1.0",

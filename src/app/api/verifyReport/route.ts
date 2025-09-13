@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ethers } from 'ethers';
 import crypto from 'crypto';
+export const runtime = 'nodejs';
 
 // Smart contract ABI
 const ABI = [
@@ -10,6 +11,14 @@ const ABI = [
 
 export async function POST(req: NextRequest) {
     try {
+        // Validate env vars
+        if (!process.env.AVALANCHE_RPC_URL || !process.env.AVALANCHE_CONTRACT_ADDRESS) {
+            return NextResponse.json(
+                { error: 'Blockchain environment not configured: missing AVALANCHE_RPC_URL or AVALANCHE_CONTRACT_ADDRESS' },
+                { status: 500 }
+            );
+        }
+
         const formData = await req.formData();
         const file = formData.get('file') as File;
 

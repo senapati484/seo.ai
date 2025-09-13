@@ -1,6 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+// Client-side upload function
+const uploadToPinata = async (file: File) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/pinata/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('Upload failed:', error);
+    throw error;
+  }
+};
+
 export const generatePDF = async (reportData: any) => {
   if (typeof window === "undefined") {
     console.error("PDF generation can only run in the browser");
@@ -664,31 +682,41 @@ export const generatePDF = async (reportData: any) => {
       jsPDF: { unit: "cm", format: "a4", orientation: "portrait" },
     };
 
-    const pdf = await html2pdf().set(opt).from(element).output('datauristring');
+    // Generate PDF as blob
+    const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
 
-    const base64Data = pdf.split(',')[1];
+    // Create a File object from the blob
+    const pdfFile = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
 
-    // Check if crypto is available
-    if (!window.crypto || !window.crypto.subtle) {
-      throw new Error("Crypto API is not available in this browser");
-    }
+    // Upload to Pinata using the client-side function
+    const pinataResponse = await uploadToPinata(pdfFile);
 
-    const encoder = new TextEncoder();
-    const pdfData = encoder.encode(base64Data);
-    const hashBuffer = await window.crypto.subtle.digest('SHA-256', pdfData);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    console.log("PDF uploaded to Pinata:", pinataResponse);
 
-    console.log('PDF Hash:', hashHex);
-
+    // Create download link for the user
+    const url = URL.createObjectURL(pdfBlob);
     const link = document.createElement('a');
-    link.href = pdf;
+    link.href = url;
     link.download = opt.filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    return { success: true, hash: hashHex };
+    // Clean up
+    URL.revokeObjectURL(url);
+
+    return {
+      success: true,
+      // original
+      pinataResponse,
+      // bubbled up for easy UI consumption
+      cid: pinataResponse.cid,
+      ipfsUrl: pinataResponse.ipfsUrl,
+      hash: pinataResponse.hash ?? pinataResponse?.hash, // in case server returns
+      txHash: pinataResponse.txHash ?? pinataResponse?.txHash,
+      blockNumber: pinataResponse.blockNumber ?? pinataResponse?.blockNumber,
+      pinataUrl: pinataResponse.pinataUrl ?? pinataResponse?.pinataUrl,
+    };
   } catch (error) {
     console.error("PDF generation failed:", error);
     throw error;

@@ -23,23 +23,6 @@ const storeReportHash = async (hash: string) => {
   }
 };
 
-const verifyReport = async (file: File) => {
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const response = await fetch("/api/verifyReport", {
-      method: "POST",
-      body: formData,
-    });
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error verifying report:", error);
-    return { valid: false, error: "Verification failed" };
-  }
-};
-
 // Update your handleSubmit function to store the hash after analysis
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -82,6 +65,23 @@ const handleSubmit = async (e) => {
     setError(err.message);
   } finally {
     setLoading(false);
+  }
+};
+
+const verifyReport = async (file: File) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/verifyReport", {
+      method: "POST",
+      body: formData,
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error verifying report:", error);
+    return { valid: false, error: "Verification failed" };
   }
 };
 
