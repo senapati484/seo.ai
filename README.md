@@ -51,16 +51,16 @@ pragma solidity ^0.8.0;
 
 contract ReportVerification {
     mapping(bytes32 => uint256) private reportTimestamps;
-    
+
     event ReportStored(bytes32 indexed reportHash, uint256 timestamp);
-    
+
     function storeReport(string memory _reportHash) public {
         bytes32 hash = keccak256(abi.encodePacked(_reportHash));
         require(reportTimestamps[hash] == 0, "Report already stored");
         reportTimestamps[hash] = block.timestamp;
         emit ReportStored(hash, block.timestamp);
     }
-    
+
     function verifyReport(string memory _reportHash) public view returns (uint256) {
         bytes32 hash = keccak256(abi.encodePacked(_reportHash));
         return reportTimestamps[hash];
@@ -151,20 +151,24 @@ Traditional document verification systems suffer from several limitations:
 ### How Web3 Solves This
 
 1. **Immutable Record**
+
    - Once a document's hash is stored on the blockchain, it cannot be altered or deleted
    - Provides cryptographic proof of the document's existence at a specific time
 
 2. **Decentralized Verification**
+
    - No single entity controls the verification process
    - Anyone can independently verify a document without permission
    - Eliminates the need to trust a central authority
 
 3. **Tamper-Evident**
+
    - The SHA-256 hash acts as a unique fingerprint for each document
    - Even a single character change creates a completely different hash
    - Any tampering is immediately detectable during verification
 
 4. **Transparent Audit Trail**
+
    - Blockchain provides a public, timestamped record of when the document was registered
    - Full history of verifications is permanently stored and auditable
 
@@ -191,10 +195,12 @@ Traditional document verification systems suffer from several limitations:
 The application uses a hybrid approach:
 
 1. **Server-Side Transactions**:
+
    - The server handles the actual blockchain transactions using a dedicated wallet
    - This ensures consistent gas payments and better reliability
 
 2. **Client-Side Verification**:
+
    - Users can verify reports without needing a wallet
    - The verification is done by querying the blockchain directly
 
@@ -205,9 +211,11 @@ The application uses a hybrid approach:
 ## 📚 API Endpoints
 
 ### `POST /api/pinata/upload`
+
 Uploads a file to IPFS and stores its hash on-chain.
 
 **Request:**
+
 ```http
 POST /api/pinata/upload
 Content-Type: multipart/form-data
@@ -216,6 +224,7 @@ file: <PDF file>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -229,9 +238,11 @@ file: <PDF file>
 ```
 
 ### `POST /api/verifyReport`
+
 Verifies if a file's hash exists on-chain.
 
 **Request:**
+
 ```http
 POST /api/verifyReport
 Content-Type: multipart/form-data
@@ -240,6 +251,7 @@ file: <PDF file>
 ```
 
 **Response (Success):**
+
 ```json
 {
   "valid": true,
@@ -249,6 +261,7 @@ file: <PDF file>
 ```
 
 **Response (Not Found):**
+
 ```json
 {
   "valid": false,
@@ -259,12 +272,14 @@ file: <PDF file>
 ## 📦 Deployment
 
 ### Vercel (Recommended)
+
 1. Push your code to a GitHub/GitLab repository
 2. Import the repository to Vercel
 3. Add the environment variables in the Vercel dashboard
 4. Deploy!
 
 ### Self-Hosted
+
 1. Build the application:
    ```bash
    npm run build
@@ -296,9 +311,9 @@ MIT
 
 ## 📧 Contact
 
-Your Name - [@yourtwitter](https://twitter.com/yourtwitter) - email@example.com
+Your Name - [@yourtwitter](https://twitter.com/sayansenapati11) - sayansenapati2544@gmail.com
 
-Project Link: [https://github.com/yourusername/seo-verification](https://github.com/yourusername/seo-verification)
+Project Link: [https://github.com/senapati484/seo.ai](https://github.com/senapati484/seo.ai)
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
@@ -316,3 +331,5 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## made with ❤️ by Sayan Senapati
