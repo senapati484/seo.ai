@@ -1,8 +1,26 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/*eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
 import { useState } from "react";
 import { generatePDF } from "@/lib/pdfGenerator";
+
+interface ReportData {
+  url: string;
+  calculatedScores?: {
+    seo: number;
+    accessibility: number;
+    bestPractices: number;
+  };
+  [key: string]: any; // For other properties we might not need to type strictly
+}
+
+interface GeminiResponse {
+  issues: Array<{ 
+    description: string; 
+    severity: 'low' | 'medium' | 'high' 
+  }>;
+  modifications: string[];
+  insights: string[];
+}
 
 const isValidUrl = (urlString: string) => {
   try {
@@ -10,8 +28,8 @@ const isValidUrl = (urlString: string) => {
     const urlObj = new URL(urlString.trim());
     return urlObj.protocol === "http:" || urlObj.protocol === "https:";
   } catch (e: any) {
-    return false;
     console.log(e);
+    return false;
   }
 };
 
@@ -19,8 +37,11 @@ export default function SEOAnalyzer() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [reportData, setReportData] = useState(null);
+  const [reportData, setReportData] = useState<ReportData | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const [geminiResponse, setGeminiResponse] = useState<GeminiResponse | null>(null);
+  const [geminiLoading, setGeminiLoading] = useState(false);
+  const [geminiError, setGeminiError] = useState("");
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(e.target.value);
@@ -32,32 +53,27 @@ export default function SEOAnalyzer() {
       setError("Please enter a URL");
       return;
     }
-
     if (!isValidUrl(url)) {
       setError(
         "Please enter a valid HTTP or HTTPS URL (e.g., https://example.com)"
       );
       return;
     }
-
     setLoading(true);
     setError("");
     setShowReport(false);
-
+    setGeminiResponse(null);
     try {
       const encodedUrl = encodeURIComponent(url);
-
       // Start with content analysis as it's more reliable
       const contentResponse = await fetch("/api/content?url=" + encodedUrl);
       const contentData = await contentResponse.json();
-
       if (!contentResponse.ok || contentData.error) {
         throw new Error(
           contentData.error ||
             "Content analysis failed (" + contentResponse.status + ")"
         );
       }
-
       // Initialize report data with content analysis
       const reportData = {
         url,
@@ -88,16 +104,13 @@ export default function SEOAnalyzer() {
         keywords: null,
         backlinks: null,
       };
-
       // Try to get PageSpeed data
       try {
         const techResponse = await fetch("/api/pagespeed?url=" + encodedUrl);
         console.log("PageSpeed response status:", techResponse.status);
-
         if (techResponse.ok) {
           const techData = await techResponse.json();
           console.log("PageSpeed data received:", techData);
-
           if (!techData.error) {
             Object.assign(reportData, {
               performance: techData.performance,
@@ -146,7 +159,6 @@ export default function SEOAnalyzer() {
           );
           const errorText = await techResponse.text();
           console.log("PageSpeed error response:", errorText);
-
           // Set performance data as unavailable, but keep calculated scores from content analysis
           Object.assign(reportData, {
             performance: "API Error",
@@ -168,7 +180,6 @@ export default function SEOAnalyzer() {
         }
       } catch (error: any) {
         console.log("PageSpeed data unavailable:", error.message);
-
         // Set performance data as unavailable, but keep calculated scores from content analysis
         Object.assign(reportData, {
           performance: "API Error",
@@ -188,7 +199,6 @@ export default function SEOAnalyzer() {
           si: "API Error",
         });
       }
-
       // Try to get keyword data
       try {
         const keywordResponse = await fetch("/api/keywords?url=" + encodedUrl);
@@ -201,7 +211,6 @@ export default function SEOAnalyzer() {
       } catch (error: any) {
         console.log("Keyword data unavailable:", error.message);
       }
-
       // Try to get backlink data
       try {
         const backlinkResponse = await fetch(
@@ -216,7 +225,6 @@ export default function SEOAnalyzer() {
       } catch (error: any) {
         console.log("Backlink data unavailable:", error.message);
       }
-
       setReportData(reportData);
       setShowReport(true);
     } catch (error: any) {
@@ -227,9 +235,97 @@ export default function SEOAnalyzer() {
     }
   };
 
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [pdfError, setPdfError] = useState("");
+
   const generatePDFReport = async () => {
-    if (reportData) {
-      await generatePDF(reportData);
+    if (typeof window === "undefined") {
+      console.error("PDF generation can only run in the browser");
+      return;
+    }
+    
+    if (!reportData) {
+      console.error("No report data available for PDF generation");
+      setPdfError("No report data available. Please analyze a URL first.");
+      return;
+    }
+    
+    console.log("Starting PDF generation with data:", reportData);
+    setIsGeneratingPDF(true);
+    setPdfError("");
+    
+    try {
+      const result = await generatePDF(reportData);
+      console.log("PDF generated successfully:", result);
+      
+      if (result?.hash) {
+        console.log("PDF Hash:", result.hash);
+        // You can store this hash in state or use it as needed
+      }
+    } catch (error: unknown) {
+      console.error("Failed to generate PDF:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setPdfError(`Failed to generate PDF: ${errorMessage}`);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const getGeminiInsights = async () => {
+    if (!reportData) return;
+
+    setGeminiLoading(true);
+    setGeminiError("");
+    setGeminiResponse(null);
+
+    try {
+      if (!reportData) {
+        throw new Error('No report data available');
+      }
+      
+      const { url: reportUrl, calculatedScores, ...restData } = reportData;
+      
+      const response = await fetch("/api/gemini", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: reportUrl,
+          calculatedScores,
+          ...restData
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Gemini API response:', data);
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || `API request failed with status ${response.status}`);
+      }
+
+      // Validate and transform the response data
+      if (!data.data) {
+        throw new Error('No data in response');
+      }
+
+      // Ensure all required arrays exist and are arrays
+      const transformedData: GeminiResponse = {
+        issues: Array.isArray(data.data.issues) ? data.data.issues : [],
+        modifications: Array.isArray(data.data.modifications) ? data.data.modifications : [],
+        insights: Array.isArray(data.data.insights) ? data.data.insights : []
+      };
+
+      console.log('Transformed Gemini response:', transformedData);
+      setGeminiResponse(transformedData);
+      setGeminiError("");
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error("Gemini API request failed:", error);
+      setGeminiError(err.message || "Failed to get AI insights");
+      setGeminiResponse(null);
+    } finally {
+      setGeminiLoading(false);
     }
   };
 
@@ -265,7 +361,7 @@ export default function SEOAnalyzer() {
 
   return (
     <div className="min-h-screen py-12 px-4 top-20 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto bg-white/80 py-10 backdrop-blur-xl rounded-lg shadow-lg mt-20">
+      <div className="max-w-7xl mx-auto bg-white/80 py-10 backdrop-blur-xl rounded-lg shadow-lg mt-20">
         <div className="text-center mb-8 p-6">
           <h1 className="text-5xl font-extrabold text-gray-900 mb-4">
             🚀 Comprehensive SEO Report Generator
@@ -275,7 +371,6 @@ export default function SEOAnalyzer() {
             insights
           </p>
         </div>
-
         {!showReport && (
           <div className="max-w-md mx-auto">
             <div className="mt-12">
@@ -286,26 +381,24 @@ export default function SEOAnalyzer() {
                 placeholder="https://example.com"
                 disabled={loading}
                 className={
-                  "w-full px-5 py-4 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 " +
-                  (error ? "border-red-300" : "border-gray-300")
+                  "w-full px-5 py-4 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" +
+                  (error ? " border-red-300" : " border-gray-300")
                 }
               />
             </div>
-
             {error && (
               <div className="mt-4 p-2 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
-
             <button
               onClick={analyzeSite}
               disabled={!url.trim() || loading}
               className={
-                "mt-4 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white " +
+                "mt-4 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white" +
                 (loading || !url.trim()
-                  ? "bg-indigo-400 cursor-not-allowed"
-                  : "bg-indigo-600 hover:bg-indigo-700")
+                  ? " bg-indigo-400 cursor-not-allowed"
+                  : " bg-indigo-600 hover:bg-indigo-700")
               }
             >
               {loading ? (
@@ -336,16 +429,14 @@ export default function SEOAnalyzer() {
                 "Generate SEO Report"
               )}
             </button>
-
             <p className="mt-4 text-sm text-gray-500">
               Enter a website URL to generate a comprehensive SEO analysis
               report
             </p>
           </div>
         )}
-
         {showReport && reportData && (
-          <div className="bg-white/80 backdrop-blur-xl rounded-lg shadow-lg p-6">
+          <div className="rounded-lg shadow-lg p-6">
             {/* Header */}
             <div className="border-b border-gray-200 pb-4 mb-6">
               <div className="flex justify-between items-start">
@@ -361,15 +452,22 @@ export default function SEOAnalyzer() {
                     {new Date().toLocaleTimeString()}
                   </p>
                 </div>
-                <button
-                  onClick={generatePDFReport}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                >
-                  📄 Download PDF
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={generatePDFReport}
+                    disabled={isGeneratingPDF}
+                    className={`bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium ${
+                      isGeneratingPDF ? 'opacity-75 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {isGeneratingPDF ? '🔄 Generating...' : '📄 Download PDF'}
+                  </button>
+                  {pdfError && (
+                    <p className="text-red-600 text-xs mt-1">{pdfError}</p>
+                  )}
+                </div>
               </div>
             </div>
-
             {/* Executive Summary */}
             <div className="bg-blue-50/80 backdrop-blur-xl border border-blue-200 rounded-lg p-4 mb-6">
               <h3 className="text-lg font-semibold text-blue-900 mb-2">
@@ -383,21 +481,20 @@ export default function SEOAnalyzer() {
                 visibility and user experience.
               </p>
             </div>
-
             {/* Performance Metrics */}
             <div className="mb-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">
                 🚀 Performance Metrics
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="p-4 bg-gray-50 rounded-lg">
                   <h4 className="font-semibold text-gray-700">Performance</h4>
                   <p
                     className={`text-2xl font-bold ${getScoreColor(
-                      reportData.performance as string | number
+                      reportData?.performance as string | number
                     )}`}
                   >
-                    {formatScore(reportData.performance as string | number)}
+                    {formatScore(reportData?.performance as string | number)}
                   </p>
                   <p className="text-sm text-gray-600">
                     {getScoreStatus(reportData.performance as string | number)}
@@ -446,7 +543,6 @@ export default function SEOAnalyzer() {
                 </div>
               </div>
             </div>
-
             {/* Core Web Vitals */}
             <div className="mb-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">
@@ -458,32 +554,31 @@ export default function SEOAnalyzer() {
                   <p className="text-lg font-bold text-gray-900">
                     {reportData.lcp || "N/A"}
                   </p>
-                  <p className="text-sm text-gray-600">Target: &lt; 2.5s</p>
+                  <p className="text-sm text-gray-600">Target: &lt;2.5s</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-gray-700">FCP</h4>
                   <p className="text-lg font-bold text-gray-900">
                     {reportData.fcp || "N/A"}
                   </p>
-                  <p className="text-sm text-gray-600">Target: &lt; 1.8s</p>
+                  <p className="text-sm text-gray-600">Target: &lt;1.8s</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-gray-700">CLS</h4>
                   <p className="text-lg font-bold text-gray-900">
                     {reportData.cls || "N/A"}
                   </p>
-                  <p className="text-sm text-gray-600">Target: &lt; 0.1</p>
+                  <p className="text-sm text-gray-600">Target: &lt;0.1</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-gray-700">TBT</h4>
                   <p className="text-lg font-bold text-gray-900">
                     {reportData.tbt || "N/A"}
                   </p>
-                  <p className="text-sm text-gray-600">Target: &lt; 200ms</p>
+                  <p className="text-sm text-gray-600">Target: &lt;200ms</p>
                 </div>
               </div>
             </div>
-
             {/* Content Analysis */}
             <div className="mb-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">
@@ -536,7 +631,6 @@ export default function SEOAnalyzer() {
                 </div>
               </div>
             </div>
-
             {/* Keyword Rankings */}
             {reportData.keywords && (
               <div className="mb-8">
@@ -583,7 +677,6 @@ export default function SEOAnalyzer() {
                     <p className="text-sm text-gray-600">Target: 2-5%</p>
                   </div>
                 </div>
-
                 {/* Best Performing Keywords */}
                 <div className="bg-gray-50 p-4 rounded-lg mb-4">
                   <h4 className="font-semibold text-gray-700 mb-3">
@@ -614,7 +707,6 @@ export default function SEOAnalyzer() {
                 </div>
               </div>
             )}
-
             {/* Backlink Profile */}
             {reportData.backlinks && (
               <div className="mb-8">
@@ -656,7 +748,6 @@ export default function SEOAnalyzer() {
                     </p>
                   </div>
                 </div>
-
                 {/* Top Referring Domains */}
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-gray-700 mb-3">
@@ -687,7 +778,6 @@ export default function SEOAnalyzer() {
                 </div>
               </div>
             )}
-
             {/* Technical SEO */}
             <div className="mb-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">
@@ -758,7 +848,6 @@ export default function SEOAnalyzer() {
                 </div>
               </div>
             </div>
-
             {/* Actionable Recommendations */}
             <div className="mb-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">
@@ -822,7 +911,6 @@ export default function SEOAnalyzer() {
                 )}
               </div>
             </div>
-
             {/* Next Steps */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-yellow-900 mb-2">
@@ -838,19 +926,123 @@ export default function SEOAnalyzer() {
                 <li>Monitor progress with regular SEO audits</li>
               </ol>
             </div>
-
             {/* Back to Analysis Button */}
             <div className="mt-8 text-center">
               <button
                 onClick={() => {
                   setShowReport(false);
                   setReportData(null);
+                  setGeminiResponse(null);
                 }}
                 className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-md text-sm font-medium"
               >
                 🔄 Analyze Another URL
               </button>
             </div>
+          </div>
+        )}
+        {/* Gemini Response section */}
+        {reportData && (
+          <div className="mt-8 p-6 bg-white rounded-lg shadow-lg">
+            <div className="flex flex-col items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                Get AI Insights and Improve SEO
+              </h2>
+              <button
+                onClick={getGeminiInsights}
+                disabled={geminiLoading}
+                className={`bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-md text-sm font-medium ${
+                  geminiLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {geminiLoading ? "Analyzing..." : "AI Response"}
+              </button>
+            </div>
+
+            {geminiError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <p className="text-red-600">{geminiError}</p>
+              </div>
+            )}
+
+            {geminiResponse && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h3 className="text-xl font-bold text-blue-900 mb-4">
+                  🤖 AI-Powered SEO Recommendations
+                </h3>
+
+                {geminiResponse.issues && geminiResponse.issues.length > 0 ? (
+                  <div className="mb-6">
+                    <h4 className="text-lg font-semibold text-blue-800 mb-2">
+                      🚨 Critical Issues
+                    </h4>
+                    <ul className="space-y-2">
+                      {geminiResponse.issues.map(
+                        (issue, index) => (
+                          <li key={index} className="bg-white p-3 rounded-lg">
+                            <span
+                              className={`inline-block px-2 py-1 rounded text-xs font-medium mr-2 ${
+                                issue.severity === "high"
+                                  ? "bg-red-100 text-red-800"
+                                  : issue.severity === "medium"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-blue-100 text-blue-800"
+                              }`}
+                            >
+                              {issue.severity?.toUpperCase() || 'UNKNOWN'}
+                            </span>
+                            <span className="whitespace-pre-wrap">{issue.description}</span>
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                ) : (
+                  <div className="mb-6 p-4 bg-green-50 text-green-800 rounded-lg">
+                    🎉 No critical issues found! Your SEO looks good!
+                  </div>
+                )}
+
+                {geminiResponse.modifications && geminiResponse.modifications.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-lg font-semibold text-blue-800 mb-2">
+                      🔧 Recommended Modifications
+                    </h4>
+                    <ol className="list-decimal list-inside space-y-2">
+                      {geminiResponse.modifications.map((mod, index) => (
+                        <li key={index} className="bg-white p-3 rounded-lg">
+                          <div 
+                            className="prose max-w-none"
+                            dangerouslySetInnerHTML={{
+                              __html: mod.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                       .replace(/\n/g, '<br />')
+                            }}
+                          />
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+
+                {geminiResponse.insights && geminiResponse.insights.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-blue-800 mb-2">
+                      💡 Insights & Opportunities
+                    </h4>
+                    <ul className="space-y-2">
+                      {geminiResponse.insights.map((insight, index) => (
+                        <li key={index} className="bg-white p-3 rounded-lg">
+                          <div className="flex items-start">
+                            <span className="mr-2">✨</span>
+                            <span className="whitespace-pre-wrap">{insight}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

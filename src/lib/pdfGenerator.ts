@@ -1,29 +1,37 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-export const generatePDF = async (data) => {
-  try {
-    const html2pdf = (await import("html2pdf.js")).default;
+export const generatePDF = async (reportData: any) => {
+  if (typeof window === "undefined") {
+    console.error("PDF generation can only run in the browser");
+    return { success: false, error: "PDF generation can only run in the browser" };
+  }
 
-    // Create a styled container
+  try {
+    if (!reportData) {
+      throw new Error("No data provided for PDF generation");
+    }
+
+    console.log("Generating PDF with data:", reportData);
+
+    const html2pdf = (await import("html2pdf.js")).default;
     const element = document.createElement("div");
     element.style.padding = "20px";
     element.style.fontFamily = "Arial, sans-serif";
     element.style.maxWidth = "800px";
     element.style.margin = "0 auto";
 
-    // Helper function to get score color
-    const getScoreColor = (score) => {
+    const getScoreColor = (score: string | number) => {
       if (typeof score === "string") {
         if (score === "API Error") return "#dc3545";
-        return "#666";
+        return "#666666";
       }
       if (score >= 90) return "#28a745";
       if (score >= 50) return "#ffc107";
       return "#dc3545";
     };
 
-    // Helper function to get score status
-    const getScoreStatus = (score) => {
+    const getScoreStatus = (score: string | number) => {
       if (typeof score === "string") {
         if (score === "API Error") return "API Error";
         return score;
@@ -33,11 +41,9 @@ export const generatePDF = async (data) => {
       return "Poor";
     };
 
-    // Helper function to format boolean
-    const formatBoolean = (value) => (value ? "✅ Yes" : "❌ No");
+    const formatBoolean = (value: boolean) => (value ? "✅ Yes" : "❌ No");
 
-    // Helper function to format score
-    const formatScore = (score) => {
+    const formatScore = (score: string | number) => {
       if (typeof score === "string") {
         if (score === "API Error") return "API Error";
         return score;
@@ -45,7 +51,9 @@ export const generatePDF = async (data) => {
       return `${score}%`;
     };
 
-    // Create styled HTML template
+    // Create alias for template usage
+    const data = reportData;
+
     element.innerHTML = `
             <style>
                 body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
@@ -77,7 +85,7 @@ export const generatePDF = async (data) => {
             <h1>📊 Comprehensive SEO Analysis Report</h1>
             
             <div class="url">
-                <strong>Analyzed URL:</strong> ${data.url || "N/A"}
+                <strong>Analyzed URL:</strong> ${data?.url || "N/A"}
             </div>
 
             <div class="summary">
@@ -185,29 +193,29 @@ export const generatePDF = async (data) => {
             <div class="grid">
                 <div class="metric">
                     <h3>Total Keywords</h3>
-                    <p><strong>${data.keywords.totalKeywords.toLocaleString()}</strong></p>
+                    <p><strong>${(data.keywords.totalKeywords || 0).toLocaleString()}</strong></p>
                     <p class="recommendation">Keywords tracked in search results</p>
                 </div>
                 
                 <div class="metric">
                     <h3>Top 10 Keywords</h3>
-                    <p><strong>${data.keywords.top10Keywords}</strong> (${data.keywords.keywordDistribution.top10Percent
+                    <p><strong>${data.keywords.top10Keywords || 0}</strong> (${data.keywords.keywordDistribution?.top10Percent || 0
         }%)</p>
                     <p class="recommendation">Target: 20-30%+ in Top 10</p>
                 </div>
                 
                 <div class="metric">
                     <h3>Organic Traffic</h3>
-                    <p><strong>${data.keywords.organicTraffic.monthly.toLocaleString()}</strong> monthly visitors</p>
-                    <p class="recommendation">Trend: ${data.keywords.organicTraffic.trend
-        } (${data.keywords.organicTraffic.change}%)</p>
+                    <p><strong>${(data.keywords.organicTraffic?.monthly || 0).toLocaleString()}</strong> monthly visitors</p>
+                    <p class="recommendation">Trend: ${data.keywords.organicTraffic?.trend || "N/A"
+        } (${data.keywords.organicTraffic?.change || 0}%)</p>
                 </div>
                 
                 <div class="metric">
                     <h3>Conversion Rate</h3>
-                    <p><strong>${data.keywords.conversionRate.rate
+                    <p><strong>${data.keywords.conversionRate?.rate || 0
         }%</strong></p>
-                    <p class="recommendation">Target: 2-5% (Benchmark: ${data.keywords.conversionRate.benchmark
+                    <p class="recommendation">Target: 2-5% (Benchmark: ${data.keywords.conversionRate?.benchmark || "N/A"
         })</p>
                 </div>
             </div>
@@ -222,13 +230,13 @@ export const generatePDF = async (data) => {
                     </tr>
                 </thead>
                 <tbody>
-                    ${data.keywords.bestPerformingKeywords
+                    ${(data.keywords.bestPerformingKeywords || [])
           .map(
-            (keyword) => `
+            (keyword: any) => `
                         <tr>
-                            <td>${keyword.keyword}</td>
-                            <td>#${keyword.position}</td>
-                            <td>${keyword.volume.toLocaleString()}</td>
+                            <td>${keyword.keyword || "N/A"}</td>
+                            <td>#${keyword.position || "N/A"}</td>
+                            <td>${(keyword.volume || 0).toLocaleString()}</td>
                         </tr>
                     `
           )
@@ -246,13 +254,13 @@ export const generatePDF = async (data) => {
                     </tr>
                 </thead>
                 <tbody>
-                    ${data.keywords.keywordOpportunities
+                    ${(data.keywords.keywordOpportunities || [])
           .map(
-            (keyword) => `
+            (keyword: any) => `
                         <tr>
-                            <td>${keyword.keyword}</td>
-                            <td>${keyword.difficulty}</td>
-                            <td>${keyword.volume.toLocaleString()}</td>
+                            <td>${keyword.keyword || "N/A"}</td>
+                            <td>${keyword.difficulty || "N/A"}</td>
+                            <td>${(keyword.volume || 0).toLocaleString()}</td>
                         </tr>
                     `
           )
@@ -269,28 +277,28 @@ export const generatePDF = async (data) => {
             <div class="grid">
                 <div class="metric">
                     <h3>Total Backlinks</h3>
-                    <p><strong>${data.backlinks.totalBacklinks.toLocaleString()}</strong></p>
+                    <p><strong>${(data.backlinks.totalBacklinks || 0).toLocaleString()}</strong></p>
                     <p class="recommendation">Total backlinks pointing to your site</p>
                 </div>
                 
                 <div class="metric">
                     <h3>Referring Domains</h3>
-                    <p><strong>${data.backlinks.referringDomains.toLocaleString()}</strong></p>
+                    <p><strong>${(data.backlinks.referringDomains || 0).toLocaleString()}</strong></p>
                     <p class="recommendation">Target: 500+ (quality matters)</p>
                 </div>
                 
                 <div class="metric">
                     <h3>Domain Authority</h3>
-                    <p><strong>${data.backlinks.domainAuthority
+                    <p><strong>${data.backlinks.domainAuthority || "N/A"
         }/100</strong></p>
                     <p class="recommendation">Overall domain strength score</p>
                 </div>
                 
                 <div class="metric">
                     <h3>New Backlinks (30d)</h3>
-                    <p><strong>+${data.backlinks.backlinkGrowth.last30Days
+                    <p><strong>+${data.backlinks.backlinkGrowth?.last30Days || 0
         }</strong></p>
-                    <p class="recommendation">Growth trend: ${data.backlinks.backlinkGrowth.trend
+                    <p class="recommendation">Growth trend: ${data.backlinks.backlinkGrowth?.trend || "N/A"
         }</p>
                 </div>
             </div>
@@ -306,15 +314,15 @@ export const generatePDF = async (data) => {
                     </tr>
                 </thead>
                 <tbody>
-                    ${data.backlinks.topReferringDomains
+                    ${(data.backlinks.topReferringDomains || [])
           .slice(0, 8)
           .map(
-            (domain) => `
+            (domain: any) => `
                         <tr>
-                            <td>${domain.domain}</td>
-                            <td>${domain.authority}</td>
-                            <td>${domain.backlinks}</td>
-                            <td>${domain.type}</td>
+                            <td>${domain.domain || "N/A"}</td>
+                            <td>${domain.authority || "N/A"}</td>
+                            <td>${domain.backlinks || "N/A"}</td>
+                            <td>${domain.type || "N/A"}</td>
                         </tr>
                     `
           )
@@ -326,17 +334,17 @@ export const generatePDF = async (data) => {
             <div class="grid">
                 <div class="metric">
                     <h4>High Quality</h4>
-                    <p><strong>${data.backlinks.backlinkQuality.high.toLocaleString()}</strong> (${data.backlinks.backlinkQuality.highPercent
+                    <p><strong>${(data.backlinks.backlinkQuality?.high || 0).toLocaleString()}</strong> (${data.backlinks.backlinkQuality?.highPercent || 0
         }%)</p>
                 </div>
                 <div class="metric">
                     <h4>Medium Quality</h4>
-                    <p><strong>${data.backlinks.backlinkQuality.medium.toLocaleString()}</strong> (${data.backlinks.backlinkQuality.mediumPercent
+                    <p><strong>${(data.backlinks.backlinkQuality?.medium || 0).toLocaleString()}</strong> (${data.backlinks.backlinkQuality?.mediumPercent || 0
         }%)</p>
                 </div>
                 <div class="metric">
                     <h4>Low Quality</h4>
-                    <p><strong>${data.backlinks.backlinkQuality.low.toLocaleString()}</strong> (${data.backlinks.backlinkQuality.lowPercent
+                    <p><strong>${(data.backlinks.backlinkQuality?.low || 0).toLocaleString()}</strong> (${data.backlinks.backlinkQuality?.lowPercent || 0
         }%)</p>
                 </div>
             </div>
@@ -406,21 +414,21 @@ export const generatePDF = async (data) => {
                 <div class="metric">
                     <h3>Title Length</h3>
                     <div class="score" style="color: ${getScoreColor(
-        data.titleLength * 100
+        (data.titleLength || 0) * 100
       )}">
                         ${Math.round(
-        data.titleLength * 100
-      )}% - ${getScoreStatus(data.titleLength * 100)}
+        (data.titleLength || 0) * 100
+      )}% - ${getScoreStatus((data.titleLength || 0) * 100)}
                     </div>
                 </div>
                 
                 <div class="metric">
                     <h3>Link Text</h3>
                     <div class="score" style="color: ${getScoreColor(
-        data.linkText * 100
+        (data.linkText || 0) * 100
       )}">
-                        ${Math.round(data.linkText * 100)}% - ${getScoreStatus(
-        data.linkText * 100
+                        ${Math.round((data.linkText || 0) * 100)}% - ${getScoreStatus(
+        (data.linkText || 0) * 100
       )}
                     </div>
                 </div>
@@ -428,10 +436,10 @@ export const generatePDF = async (data) => {
                 <div class="metric">
                     <h3>Image Alt Text</h3>
                     <div class="score" style="color: ${getScoreColor(
-        data.imageAlt * 100
+        (data.imageAlt || 0) * 100
       )}">
-                        ${Math.round(data.imageAlt * 100)}% - ${getScoreStatus(
-        data.imageAlt * 100
+                        ${Math.round((data.imageAlt || 0) * 100)}% - ${getScoreStatus(
+        (data.imageAlt || 0) * 100
       )}
                     </div>
                 </div>
@@ -439,10 +447,10 @@ export const generatePDF = async (data) => {
                 <div class="metric">
                     <h3>Canonical URL</h3>
                     <div class="score" style="color: ${getScoreColor(
-        data.canonical * 100
+        (data.canonical || 0) * 100
       )}">
-                        ${Math.round(data.canonical * 100)}% - ${getScoreStatus(
-        data.canonical * 100
+                        ${Math.round((data.canonical || 0) * 100)}% - ${getScoreStatus(
+        (data.canonical || 0) * 100
       )}
                     </div>
                 </div>
@@ -450,11 +458,11 @@ export const generatePDF = async (data) => {
                 <div class="metric">
                     <h3>Structured Data</h3>
                     <div class="score" style="color: ${getScoreColor(
-        data.structuredData * 100
+        (data.structuredData || 0) * 100
       )}">
                         ${Math.round(
-        data.structuredData * 100
-      )}% - ${getScoreStatus(data.structuredData * 100)}
+        (data.structuredData || 0) * 100
+      )}% - ${getScoreStatus((data.structuredData || 0) * 100)}
                     </div>
                 </div>
             </div>
@@ -475,9 +483,9 @@ export const generatePDF = async (data) => {
                 <div class="metric">
                     <h3>Open Graph Data</h3>
                     <p><strong>${formatBoolean(
-        data.ogData.title || data.ogData.description
+        data.ogData?.title || data.ogData?.description
       )}</strong></p>
-                    <p class="recommendation">${data.ogData.title || data.ogData.description
+                    <p class="recommendation">${data.ogData?.title || data.ogData?.description
         ? "✅ Open Graph tags are present"
         : "❌ Add Open Graph tags for better social sharing"
       }</p>
@@ -486,9 +494,9 @@ export const generatePDF = async (data) => {
                 <div class="metric">
                     <h3>Twitter Cards</h3>
                     <p><strong>${formatBoolean(
-        data.twitterData.card
+        data.twitterData?.card
       )}</strong></p>
-                    <p class="recommendation">${data.twitterData.card
+                    <p class="recommendation">${data.twitterData?.card
         ? "✅ Twitter Card tags are present"
         : "❌ Add Twitter Card tags for better Twitter sharing"
       }</p>
@@ -570,7 +578,7 @@ export const generatePDF = async (data) => {
         data.hreflang?.present
       )}</strong></p>
                     <p class="recommendation">${data.hreflang?.present
-        ? `✅ Hreflang implemented (${data.hreflang.count} languages)`
+        ? `✅ Hreflang implemented (${data.hreflang.count || 0} languages)`
         : "❌ Add hreflang tags for international SEO"
       }</p>
                 </div>
@@ -606,7 +614,7 @@ export const generatePDF = async (data) => {
         ? '<div class="recommendation"><strong>Mobile:</strong> Add viewport meta tag and ensure responsive design.</div>'
         : ""
       }
-                ${!data.ogData.title
+                ${!data.ogData?.title
         ? '<div class="recommendation"><strong>Social Media:</strong> Add Open Graph and Twitter Card meta tags for better social sharing.</div>'
         : ""
       }
@@ -648,7 +656,6 @@ export const generatePDF = async (data) => {
             </div>
         `;
 
-    // PDF generation options
     const opt = {
       margin: 1,
       filename: `seo-report-${new Date().toISOString().split("T")[0]}.pdf`,
@@ -657,10 +664,31 @@ export const generatePDF = async (data) => {
       jsPDF: { unit: "cm", format: "a4", orientation: "portrait" },
     };
 
-    // Generate and download PDF
-    await html2pdf().set(opt).from(element).save();
+    const pdf = await html2pdf().set(opt).from(element).output('datauristring');
 
-    return true;
+    const base64Data = pdf.split(',')[1];
+
+    // Check if crypto is available
+    if (!window.crypto || !window.crypto.subtle) {
+      throw new Error("Crypto API is not available in this browser");
+    }
+
+    const encoder = new TextEncoder();
+    const pdfData = encoder.encode(base64Data);
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', pdfData);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    console.log('PDF Hash:', hashHex);
+
+    const link = document.createElement('a');
+    link.href = pdf;
+    link.download = opt.filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    return { success: true, hash: hashHex };
   } catch (error) {
     console.error("PDF generation failed:", error);
     throw error;

@@ -113,34 +113,25 @@ export const NavBody = ({ children, className, visible }: NavBodyProps) => {
 };
 
 export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
-  const [hovered, setHovered] = useState<number | null>(null);
-
   return (
-    <motion.div
-      onMouseLeave={() => setHovered(null)}
+    <div
       className={cn(
-        "absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-sm font-medium text-zinc-600 transition duration-200 hover:text-zinc-800 lg:flex lg:space-x-2",
+        "hidden flex-1 flex-row items-center justify-center space-x-6 text-sm font-medium lg:flex",
         className
       )}
     >
       {items.map((item, idx) => (
         <a
-          onMouseEnter={() => setHovered(idx)}
-          onClick={onItemClick}
-          className="relative px-4 py-2 text-neutral-100 dark:text-neutral-200"
-          key={`link-${idx}`}
+          key={idx}
           href={item.link}
+          onClick={onItemClick}
+          className="relative px-3 py-2 text-gray-200 transition-colors duration-300 hover:text-white"
         >
-          {hovered === idx && (
-            <motion.div
-              layoutId="hovered"
-              className="absolute inset-0 h-full w-full rounded-full bg-gray-800 dark:bg-neutral-900"
-            />
-          )}
-          <span className="relative z-20">{item.name}</span>
+          <span className="relative z-10">{item.name}</span>
+          <span className="absolute inset-x-0 bottom-0 h-0.5 scale-x-0 bg-gradient-to-r from-blue-500 to-indigo-500 transition-transform duration-300 group-hover:scale-x-100" />
         </a>
       ))}
-    </motion.div>
+    </div>
   );
 };
 
@@ -231,17 +222,17 @@ export const MobileNavToggle = ({
 
 export const NavbarLogo = () => {
   return (
-    <a
-      href="#"
-      className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black"
-    >
+    <a href="/" className="flex items-center space-x-2 text-lg font-bold">
       <img
         src="https://assets.aceternity.com/logo-dark.png"
         alt="logo"
-        width={30}
-        height={30}
+        width={32}
+        height={32}
+        className="rounded"
       />
-      <span className="font-medium text-white">Seo.ai</span>
+      <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+        Seo.ai
+      </span>
     </a>
   );
 };

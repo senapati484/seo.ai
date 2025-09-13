@@ -5,6 +5,7 @@ import { NavbarSeo } from "@/components/common/Navbar";
 import GradientBlinds from "@/components/ui/GradientBlinds";
 import { ClerkProvider } from "@clerk/nextjs";
 import Footer from "@/components/common/Footer";
+import { Web3Provider } from "@/context/web3Context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,16 +29,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-          cz-shortcut-listen="true"
-        >
+    <html lang="en" className="h-full">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900`}
+        cz-shortcut-listen="true"
+      >
+        <Web3Provider>
           {/* Background Gradient */}
           <div className="fixed inset-0 pointer-events-auto sm:pointer-events-none">
             <GradientBlinds
-              gradientColors={["#FF9FFC", "#5227FF"]}
+              gradientColors={["#FFFFFF", "#E6E6FF"]}
               angle={45}
               noise={0.3}
               blindCount={12}
@@ -51,10 +52,14 @@ export default function RootLayout({
               mixBlendMode="lighten"
             />
           </div>
-          <NavbarSeo>{children}</NavbarSeo>
-          <Footer />
-        </body>
-      </html>
-    </ClerkProvider>
+          <div className="flex-1 flex flex-col">
+            <NavbarSeo>
+              <main className="flex-1">{children}</main>
+            </NavbarSeo>
+            <Footer />
+          </div>
+        </Web3Provider>
+      </body>
+    </html>
   );
 }
