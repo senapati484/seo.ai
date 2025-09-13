@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract SeoVerification {
+contract ReportVerification {
     mapping(string => uint256) private reportTimestamps;
     
     event ReportStored(string indexed reportHash, uint256 timestamp);
