@@ -2,15 +2,17 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import { useWeb3 } from "@/context/web3Context";
 
 export function ConnectWalletButton() {
+  const router = useRouter();
   const { wallet, connectWallet, disconnectWallet, isLoading } = useWeb3();
 
   if (wallet?.isConnected) {
     return (
       <div className="flex flex-row items-center gap-2">
-        <p className="text-sm">
+        <p className="text-sm" onClick={() => router.push("/profile")}>
           {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)} •{" "}
           {wallet.balance} ETH
         </p>

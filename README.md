@@ -1,72 +1,271 @@
-# SEO Analysis & Blockchain Verification Platform
+# 🌐 SEO Analysis & Blockchain Verification Platform
 
-A Next.js application that generates SEO analysis reports, stores them on IPFS via Pinata, and verifies their authenticity on the Avalanche C-Chain.
+A decentralized application that generates SEO analysis reports, stores them on IPFS via Pinata, and verifies their authenticity on the Avalanche C-Chain. Built with Next.js 14 and Web3 technologies.
 
-## 🌟 Features
+## 🚀 Key Features
 
-- **SEO Analysis**: Generate detailed SEO reports for any website
-- **IPFS Storage**: Securely store reports on IPFS via Pinata
-- **Blockchain Verification**: Verify report authenticity on Avalanche C-Chain
-- **PDF Generation**: Download reports as PDFs with verification details
-- **Web3 Integration**: Connect with MetaMask for decentralized identity
+- **SEO Analysis**: Generate comprehensive SEO reports for any website
+- **Decentralized Storage**: Secure IPFS storage via Pinata with content addressing
+- **Blockchain Verification**: Immutable proof of existence on Avalanche C-Chain
+- **PDF Generation & Download**: Generate and download SEO reports as PDFs
+- **Web3 Authentication**: Secure wallet connection via MetaMask
+- **Report Management**: View, verify, and manage all your SEO reports
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS
-- **Blockchain**: Avalanche C-Chain, ethers.js
-- **Storage**: IPFS via Pinata
-- **Web3**: MetaMask, ethers.js
-- **PDF Generation**: html2pdf.js
+### Core Technologies
 
-## 🏗️ Architecture
+- **Frontend**: Next.js 14, React 18, TypeScript
+- **Styling**: Tailwind CSS, Headless UI
+- **State Management**: React Context, SWR
+
+### Blockchain & Storage
+
+- **Blockchain**: Avalanche C-Chain
+- **Smart Contracts**: Solidity (0.8.0+)
+- **Web3**: ethers.js 6.x
+- **Decentralized Storage**: IPFS via Pinata
+- **Authentication**: MetaMask, Web3Modal
+
+### Backend & Utilities
+
+- **API Routes**: Next.js API Routes
+- **PDF Generation**: html2pdf.js
+- **Form Handling**: React Hook Form
+- **Data Validation**: Zod
+- **HTTP Client**: Axios
+
+## 🔄 System Workflows
 
 ### 1. Report Generation Flow
 
 ```mermaid
 graph TD
-    A[User submits URL] --> B[Generate SEO Analysis]
-    B --> C[Convert to PDF]
-    C --> D[Compute SHA-256 Hash]
-    D --> E[Upload to Pinata/IPFS]
-    E --> F[Store Hash on Avalanche C-Chain]
-    F --> G[Return Verification Details]
+    A[User Submits URL] --> B[Generate SEO Analysis]
+    B --> C[Extract Key Metrics]
+    C --> D[Generate PDF Report]
+    D --> E[Compute SHA-256 Hash]
+    E --> F[Upload to Pinata/IPFS]
+    F --> G[Store Hash on Avalanche C-Chain]
+    G --> H[Save Metadata to Firestore]
+    H --> I[Display Results to User]
+
+    style A fill:#4CAF50,stroke:#388E3C,color:white
+    style I fill:#4CAF50,stroke:#388E3C,color:white
+    style F fill:#2196F3,stroke:#0D47A1,color:white
+    style G fill:#9C27B0,stroke:#6A1B9A,color:white
 ```
 
 ### 2. Verification Flow
 
 ```mermaid
 graph TD
-    A[User uploads PDF] --> B[Compute SHA-256 Hash]
-    B --> C[Query Avalanche Contract]
-    C --> D[Return Verification Result]
+    A[User Uploads PDF] --> B[Extract Content]
+    B --> C[Compute SHA-256 Hash]
+    C --> D[Query Avalanche Contract]
+    D --> E{Hash Exists?}
+    E -->|Yes| F[Fetch Timestamp]
+    E -->|No| G[Return Not Found]
+    F --> H[Verify IPFS Link]
+    H --> I[Display Verification Results]
+
+    style A fill:#4CAF50,stroke:#388E3C,color:white
+    style I fill:#4CAF50,stroke:#388E3C,color:white
+    style D fill:#FF9800,stroke:#E65100,color:white
+    style H fill:#2196F3,stroke:#0D47A1,color:white
 ```
 
-## 🔗 Smart Contract
+### 3. Data Storage Architecture
 
-### Storage Contract (Solidity)
+```mermaid
+graph LR
+    A[Frontend] <-->|API Calls| B[Next.js API Routes]
+    B <--> C[(Firebase Firestore)]
+    B <--> D[Pinata/IPFS]
+    B <--> E[Avalanche C-Chain]
+
+    style A fill:#FFC107,stroke:#FF8F00,color:black
+    style B fill:#9C27B0,stroke:#6A1B9A,color:white
+    style C fill:#2196F3,stroke:#0D47A1,color:white
+    style D fill:#4CAF50,stroke:#2E7D32,color:white
+    style E fill:#F44336,stroke:#B71C1C,color:white
+```
+
+## 📦 Project Structure
+
+```
+seo.ai/
+├── src/
+│   ├── app/                    # Next.js 13+ App Router
+│   │   ├── api/                # API routes
+│   │   │   ├── pinata/         # Pinata file operations
+│   │   │   └── reports/        # Report management API
+│   │   └── profile/            # User profile and reports
+│   ├── components/             # Reusable UI components
+│   ├── context/                # React context providers
+│   └── lib/                    # Utility functions and configs
+│       └── firebase.ts         # Firebase Firestore integration
+└── scripts/                    # Deployment and utility scripts
+    ├── deploy-contract.js      # Contract deployment script
+    ├── check-contract.js       # Contract verification script
+    └── verify.md               # Contract verification guide
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- MetaMask browser extension
+- Pinata API keys
+- Avalanche C-Chain RPC URL
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/yourusername/seo.ai.git
+   cd seo.ai
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Set up environment variables:
+
+   ```env
+   NEXT_PUBLIC_PINATA_API_KEY=your_pinata_api_key
+   NEXT_PUBLIC_PINATA_SECRET_API_KEY=your_pinata_secret
+   NEXT_PUBLIC_PINATA_JWT=your_pinata_jwt
+   NEXT_PUBLIC_ALCHEMY_AVALANCHE_URL=your_alchemy_avalanche_url
+   NEXT_PUBLIC_CONTRACT_ADDRESS=your_contract_address
+   ```
+
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+## 🔧 Scripts
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Create production build
+- `npm start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run format` - Format code with Prettier
+
+### Utility Scripts
+
+#### 1. `deploy-contract.js`
+
+Deploys the smart contract to Avalanche C-Chain.
+
+**Usage:**
+
+```bash
+node scripts/deploy-contract.js --network avalanche
+```
+
+**Options:**
+
+- `--network`: Target network (default: 'avalanche')
+- `--private-key`: Private key for deployment (optional, uses .env if not provided)
+- `--rpc`: Custom RPC URL (optional)
+
+#### 2. `check-contract.js`
+
+Verifies contract deployment and checks contract state.
+
+**Usage:**
+
+```bash
+node scripts/check-contract.js --address 0xContractAddress
+```
+
+**Options:**
+
+- `--address`: Contract address to check (required)
+- `--network`: Network to check (default: 'avalanche')
+- `--rpc`: Custom RPC URL (optional)
+
+## 📝 Smart Contract
+
+The `ReportVerification.sol` contract provides a simple and secure way to store and verify document hashes on the Avalanche C-Chain.
+
+### Contract Features
+
+- Store document hashes with timestamps
+- Verify document existence and integrity
+- Event emission for all state changes
+- Simple and gas-efficient design
+
+### Contract Code
 
 ```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 contract ReportVerification {
-    mapping(bytes32 => uint256) private reportTimestamps;
+    // Maps report hashes to their storage timestamps
+    mapping(string => uint256) private reportTimestamps;
 
-    event ReportStored(bytes32 indexed reportHash, uint256 timestamp);
+    // Event emitted when a new report is stored
+    event ReportStored(string indexed reportHash, uint256 timestamp);
 
+    /**
+     * @dev Store a report hash with the current block timestamp
+     * @param _reportHash The hash of the report to store
+     */
     function storeReport(string memory _reportHash) public {
-        bytes32 hash = keccak256(abi.encodePacked(_reportHash));
-        require(reportTimestamps[hash] == 0, "Report already stored");
-        reportTimestamps[hash] = block.timestamp;
-        emit ReportStored(hash, block.timestamp);
+        require(reportTimestamps[_reportHash] == 0, "Report already stored");
+        reportTimestamps[_reportHash] = block.timestamp;
+        emit ReportStored(_reportHash, block.timestamp);
     }
 
+    /**
+     * @dev Verify if a report hash exists and get its timestamp
+     * @param _reportHash The hash of the report to verify
+     * @return The timestamp when the report was stored, or 0 if not found
+     */
     function verifyReport(string memory _reportHash) public view returns (uint256) {
-        bytes32 hash = keccak256(abi.encodePacked(_reportHash));
-        return reportTimestamps[hash];
+        return reportTimestamps[_reportHash];
     }
 }
 ```
+
+### Key Functions
+
+- `storeReport(string memory _reportHash)` - Store a new document hash
+- `verifyReport(string memory _reportHash) → uint256` - Get the timestamp when a report was stored (returns 0 if not found)
+
+## 🌐 API Endpoints
+
+### 1. Pinata File Operations
+
+- `POST /api/pinata/upload` - Upload file to IPFS via Pinata
+- `GET /api/pinata/download?cid=<cid>` - Download file from IPFS
+
+### 2. Report Management
+
+- `GET /api/reports/[walletAddress]` - Get all reports for a wallet
+- `POST /api/reports/store` - Store new report metadata
+
+## 🔒 Security Considerations
+
+- All sensitive operations require wallet authentication
+- Private keys are never stored or transmitted
+- Smart contract includes access control and ownership management
+- Environment variables are used for sensitive configuration
+
+## 📄 License
+
+MIT
 
 ## 🚀 Getting Started
 
@@ -311,7 +510,7 @@ MIT
 
 ## 📧 Contact
 
-Your Name - [@yourtwitter](https://twitter.com/sayansenapati11) - sayansenapati2544@gmail.com
+Senapati484 - [@sayan4.vercel.app](https://sayan4.vercel.app) - sayansenapati2544@gmail.com
 
 Project Link: [https://github.com/senapati484/seo.ai](https://github.com/senapati484/seo.ai)
 

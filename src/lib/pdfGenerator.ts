@@ -6,6 +6,18 @@ const uploadToPinata = async (file: File) => {
   try {
     const formData = new FormData();
     formData.append('file', file);
+    // Try to include the connected wallet address from localStorage (set by Web3Provider)
+    try {
+      const storedWallet = typeof window !== 'undefined' ? localStorage.getItem('web3Wallet') : null;
+      if (storedWallet) {
+        const parsed = JSON.parse(storedWallet);
+        if (parsed?.address) {
+          formData.append('walletAddress', parsed.address as string);
+        }
+      }
+    } catch {
+      // ignore if not available
+    }
 
     const response = await fetch('/api/pinata/upload', {
       method: 'POST',
@@ -690,6 +702,29 @@ export const generatePDF = async (reportData: any) => {
 
     // Upload to Pinata using the client-side function
     const pinataResponse = await uploadToPinata(pdfFile);
+
+    // const storeResult = await fetch('/api/reports/store', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({
+    //     walletAddress: userWalletAddress,
+    //     hash: uploadResult.hash,
+    //     timestamp: new Date().toISOString(),
+    //     cid: uploadResult.cid,
+    //     ipfsUrl: uploadResult.ipfsUrl,
+    //     txHash: uploadResult.txHash,
+    //     blockNumber: uploadResult.blockNumber,
+    //     network: uploadResult.network
+    //   }),
+    // });
+
+    // if (storeResult.ok) {
+    //   console.log('Report data stored successfully');
+    // } else {
+    //   console.error('Failed to store report data');
+    // }
 
     console.log("PDF uploaded to Pinata:", pinataResponse);
 

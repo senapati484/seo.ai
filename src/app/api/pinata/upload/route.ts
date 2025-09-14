@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/pinata/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
@@ -16,10 +17,19 @@ export async function POST(request: NextRequest) {
 
         const formData = await request.formData();
         const file = formData.get('file') as File;
+        const walletAddress = (formData.get('walletAddress') as string) || '';
 
         if (!file) {
             return NextResponse.json(
                 { error: 'No file provided' },
+                { status: 400 }
+            );
+        }
+
+        // Enforce authenticated wallet for this flow
+        if (!walletAddress) {
+            return NextResponse.json(
+                { error: 'Wallet address is required. Please connect your wallet before uploading.' },
                 { status: 400 }
             );
         }
@@ -66,19 +76,25 @@ export async function POST(request: NextRequest) {
 
         // Try to parse JSON error/body safely
         const text = await pinataResponse.text();
-        let json: any;
-        try { json = text ? JSON.parse(text) : {}; } catch { json = { raw: text }; }
+        let json: unknown;
+        try {
+            json = text ? JSON.parse(text) : {};
+        } catch {
+            json = { raw: text } as Record<string, unknown>;
+        }
+        type PinataResponse = { IpfsHash?: string; cid?: string; Hash?: string; error?: { message?: string }; message?: string } & Record<string, unknown>;
+        const jsonObj = (json && typeof json === 'object') ? (json as PinataResponse) : {} as PinataResponse;
 
         if (!pinataResponse.ok) {
-            console.error('Pinata API error:', pinataResponse.status, json);
-            const message = json?.error?.message || json?.message || 'Pinata upload failed';
+            console.error('Pinata API error:', pinataResponse.status, jsonObj);
+            const message = jsonObj.error?.message || jsonObj.message || 'Pinata upload failed';
             return NextResponse.json(
-                { error: message, statusCode: pinataResponse.status, details: json },
+                { error: message, statusCode: pinataResponse.status, details: jsonObj },
                 { status: 500 }
             );
         }
 
-        const ipfsHash = json.IpfsHash || json.cid || json.Hash;
+        const ipfsHash = jsonObj.IpfsHash || jsonObj.cid || jsonObj.Hash;
         const gateway = process.env.PINATA_GATEWAY || 'gateway.pinata.cloud';
         const ipfsUrl = `https://${gateway}/ipfs/${ipfsHash}`;
 
@@ -124,6 +140,45 @@ export async function POST(request: NextRequest) {
         const tx = await contract.storeReport(hash);
         const receipt = await tx.wait();
 
+        // Persist report metadata in Firebase via internal API (non-blocking error handling)
+        let storeResult: { success: boolean; id?: string; error?: string } = { success: false };
+        if (walletAddress) {
+            try {
+                const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+                const reportPayload = {
+                    walletAddress,
+                    hash,
+                    timestamp: new Date().toISOString(),
+                    cid: ipfsHash,
+                    ipfsUrl,
+                    txHash: tx.hash,
+                    blockNumber: receipt?.blockNumber ?? null,
+                    network: { chainId: Number(network.chainId), name: network.name },
+                };
+                const storeRes = await fetch(`${origin}/api/reports/store`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reportPayload),
+                });
+                if (storeRes.ok) {
+                    const json = await storeRes.json();
+                    storeResult = { success: true, id: json.id };
+                } else {
+                    const errJsonUnknown = await storeRes.json().catch(() => ({}));
+                    const errMsg = (typeof errJsonUnknown === 'object' && errJsonUnknown && 'error' in errJsonUnknown)
+                        ? String((errJsonUnknown as { error?: unknown }).error)
+                        : 'Failed to store report';
+                    storeResult = { success: false, error: errMsg };
+                }
+            } catch (persistErr: unknown) {
+                console.error('Report persistence error:', persistErr);
+                const msg = (typeof persistErr === 'object' && persistErr && 'message' in persistErr)
+                    ? String((persistErr as { message?: unknown }).message)
+                    : 'Persistence error';
+                storeResult = { success: false, error: msg };
+            }
+        }
+
         return NextResponse.json({
             success: true,
             cid: ipfsHash,
@@ -133,11 +188,13 @@ export async function POST(request: NextRequest) {
             blockNumber: receipt?.blockNumber ?? null,
             pinataUrl: `https://app.pinata.cloud/ipfs/${ipfsHash}`,
             network: { chainId: Number(network.chainId), name: network.name },
+            store: storeResult,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Pinata upload error details:', error);
+        const message = error && typeof error === 'object' && 'message' in error ? (error as any).message : 'Failed to upload to Pinata';
         return NextResponse.json(
-            { error: error.message || 'Failed to upload to Pinata' },
+            { error: message },
             { status: 500 }
         );
     }

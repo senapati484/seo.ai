@@ -184,7 +184,10 @@ export function NavbarSeo({
                   <UserButton afterSignOutUrl="/" />
                 </div>
               </SignedIn> */}
-              <NavbarButton variant="primary" className="rounded-2xl bg-white/10 text-white hover:bg-white/20 border border-white/20">
+              <NavbarButton
+                variant="primary"
+                className="rounded-2xl bg-white/10 text-white hover:bg-white/20 border border-white/20"
+              >
                 <ConnectWalletButton />
               </NavbarButton>
             </div>
