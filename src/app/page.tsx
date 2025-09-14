@@ -19,20 +19,34 @@ export default function Home() {
         </div>
       </section>
 
-      {/* <section className="relative z-10 w-full py-20">
-        <div className="container px-4 mx-auto text-center">
-          <h2 className="mb-8 text-4xl font-bold text-gray-900 dark:text-white md:text-5xl">
-            Ready to boost your website&apos;s performance?
-          </h2>
-          <p className="max-w-2xl mx-auto mb-12 text-xl text-gray-600 dark:text-gray-300">
-            Get started with our AI-powered SEO analysis today and see immediate
-            results.
-          </p>
-          <button className="px-8 py-4 text-lg font-semibold text-white transition-all duration-300 bg-blue-600 rounded-full hover:bg-blue-700 hover:scale-105">
-            Start Free Analysis
-          </button>
+      {/* CTA Section */}
+      <section className="relative z-10 w-full py-24">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-indigo-600/30 via-purple-600/30 to-pink-600/30 blur-3xl" />
+        <div className="container px-4 mx-auto">
+          <div className="max-w-4xl mx-auto text-center bg-white/10 backdrop-blur-xl rounded-3xl border border-white/10 p-10">
+            <h2 className="mb-5 text-4xl md:text-5xl font-extrabold text-white">
+              Ready to boost your SEO performance?
+            </h2>
+            <p className="max-w-2xl mx-auto mb-8 text-lg text-gray-200">
+              Generate unlimited reports, get AI insights, and verify your PDFs on-chain.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a
+                href="/generate"
+                className="px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-lg hover:scale-105 hover:shadow-purple-500/30 transition-all"
+              >
+                Start Free Analysis
+              </a>
+              <a
+                href="/pricing"
+                className="px-8 py-4 text-lg font-semibold text-white/90 bg-white/10 border border-white/20 rounded-full hover:bg-white/20 transition-all"
+              >
+                View Pricing
+              </a>
+            </div>
+          </div>
         </div>
-      </section> */}
+      </section>
     </main>
   );
 }

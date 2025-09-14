@@ -50,7 +50,10 @@ export function NavbarSeo({
         {/* ✅ Desktop Navigation */}
         <NavBody>
           <NavbarLogo />
-          <NavItems items={navItems} className="text-blue-600" />
+          <NavItems
+            items={navItems}
+            className="text-white/80 hover:text-white transition-colors"
+          />
 
           {/* Login functionality temporarily disabled */}
           <div className="flex items-center justify-center gap-4">
@@ -103,7 +106,7 @@ export function NavbarSeo({
                 <ConnectWalletButton />
               </NavbarButton>
             )} */}
-            <NavbarButton className="rounded-2xl">
+            <NavbarButton className="rounded-2xl bg-white/10 text-white hover:bg-white/20 border border-white/20">
               <ConnectWalletButton />
             </NavbarButton>
           </div>
@@ -128,7 +131,7 @@ export function NavbarSeo({
                 key={`mobile-link-${idx}`}
                 href={item.link}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="relative text-blue-600 "
+                className="relative text-white/90 hover:text-white"
               >
                 <span className="block">{item.name}</span>
               </a>
@@ -181,7 +184,7 @@ export function NavbarSeo({
                   <UserButton afterSignOutUrl="/" />
                 </div>
               </SignedIn> */}
-              <NavbarButton variant="primary" className="rounded-2xl">
+              <NavbarButton variant="primary" className="rounded-2xl bg-white/10 text-white hover:bg-white/20 border border-white/20">
                 <ConnectWalletButton />
               </NavbarButton>
             </div>

@@ -97,7 +97,29 @@ export async function POST(request: NextRequest) {
 
         const provider = new ethers.JsonRpcProvider(process.env.AVALANCHE_RPC_URL);
         const wallet = new ethers.Wallet(process.env.AVALANCHE_PRIVATE_KEY!, provider);
-        const contract = new ethers.Contract(process.env.AVALANCHE_CONTRACT_ADDRESS!, ABI, wallet);
+
+        // Trim and validate address
+        const address = process.env.AVALANCHE_CONTRACT_ADDRESS!.trim();
+        if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+            return NextResponse.json(
+                { error: 'Invalid AVALANCHE_CONTRACT_ADDRESS format', details: { address } },
+                { status: 500 }
+            );
+        }
+
+        // Preflight: ensure contract code exists at address
+        const [network, code] = await Promise.all([
+            provider.getNetwork(),
+            provider.getCode(address),
+        ]);
+        if (!code || code === '0x') {
+            return NextResponse.json(
+                { error: 'Contract not found at AVALANCHE_CONTRACT_ADDRESS on the configured network.', details: { address, chainId: Number(network.chainId) }, cid: ipfsHash, ipfsUrl },
+                { status: 500 }
+            );
+        }
+
+        const contract = new ethers.Contract(address, ABI, wallet);
 
         const tx = await contract.storeReport(hash);
         const receipt = await tx.wait();
@@ -109,7 +131,8 @@ export async function POST(request: NextRequest) {
             hash,
             txHash: tx.hash,
             blockNumber: receipt?.blockNumber ?? null,
-            pinataUrl: `https://app.pinata.cloud/ipfs/${ipfsHash}`
+            pinataUrl: `https://app.pinata.cloud/ipfs/${ipfsHash}`,
+            network: { chainId: Number(network.chainId), name: network.name },
         });
     } catch (error: any) {
         console.error('Pinata upload error details:', error);
