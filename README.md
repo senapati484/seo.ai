@@ -508,6 +508,221 @@ MIT
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
+# 📚 Data Models and Schemas
+
+This section documents the shapes we persist or exchange via APIs. Use this as the single source of truth for contracts between client, server, and chain.
+
+## Firestore Collections
+
+- `users/{walletAddress}`
+
+  - `walletAddress: string` — EVM address (checksum optional)
+  - `createdAt: number` — epoch seconds
+  - `updatedAt: number` — epoch seconds
+
+- `reports/{autoId}`
+  - `walletAddress: string`
+  - `hash: string` — SHA-256 hex string of the PDF/report content
+  - `ipfsCid: string` — IPFS CID returned by Pinata
+  - `ipfsUrl: string` — gateway URL (optional)
+  - `title: string` — report title
+  - `score: number` — overall SEO score
+  - `createdAt: number` — epoch seconds
+  - `onChainTxHash?: string` — transaction hash for store operation
+  - `onChainTimestamp?: number` — timestamp returned by contract
+
+## API DTOs (request/response)
+
+- `POST /api/pinata/upload` multipart form-data
+
+  - request: `file: Blob`
+  - response success:
+    ```json
+    {
+      "success": true,
+      "cid": "Qm...",
+      "ipfsUrl": "https://...",
+      "hash": "<sha256-hex>",
+      "txHash": "0x...",
+      "blockNumber": 123,
+      "pinataUrl": "https://..."
+    }
+    ```
+
+- `POST /api/verifyReport` multipart form-data
+
+  - request: `file: Blob`
+  - response success:
+    ```json
+    { "valid": true, "timestamp": 1712345678, "hash": "<sha256-hex>" }
+    ```
+  - response not-found:
+    ```json
+    { "valid": false, "message": "Report not found on chain" }
+    ```
+
+- `GET /api/reports/[walletAddress]`
+  - response:
+    ```json
+    {
+      "success": true,
+      "reports": [
+        /* Report documents as above */
+      ]
+    }
+    ```
+
+# ⚙️ Configuration Reference
+
+- `AVALANCHE_RPC_URL` — HTTPS RPC endpoint to Avalanche C-Chain (testnet or mainnet)
+- `AVALANCHE_CONTRACT_ADDRESS` — Deployed `ReportVerification` contract address
+- `AVALANCHE_PRIVATE_KEY` — Server-side signer for write ops (secure, never exposed client-side)
+- `PINATA_JWT` or `PINATA_API_KEY` + `PINATA_SECRET_API_KEY` — Pinata authentication
+- `PINATA_GATEWAY` — Optional dedicated gateway subdomain
+- `NEXT_PUBLIC_*` — Variables safe for the browser. Keep sensitive keys server-side only.
+
+Local setup checklist:
+
+- Create `.env.local` with required variables
+- Ensure MetaMask is installed for local wallet connection
+- Verify `scripts/deploy-contract.js` network config matches your RPC
+- If using testnet, pre-fund the deployer address with test AVAX
+
+# 🧱 Detailed Architecture
+
+- `src/app/` — App Router pages and API routes
+  - `api/pinata/*` — IPFS upload/download via Pinata
+  - `api/verifyReport` — Verifies uploaded PDF hash against on-chain record
+  - `api/reports/*` — Fetch reports for a given wallet
+- `src/context/web3Context.tsx` — Wallet connection and basic state
+- `src/lib/firebase.ts` — Firestore/Storage interoperability
+- `src/lib/web3.ts` — Crypto utilities (e.g., `generateReportHash`)
+- `ReportVerification.sol` — Smart contract storing report hashes → timestamps
+
+Interactions:
+
+1. Client generates SEO metrics → builds PDF → computes SHA-256
+2. Server uploads file to IPFS (Pinata) and stores hash on-chain via contract
+3. Server persists metadata in Firestore for fast listing
+4. Verification re-computes SHA-256 and cross-checks the contract mapping
+
+# 🧭 End-to-End Walkthrough
+
+1. Generate report on `/generate`
+2. Confirm PDF preview → click Save/Upload
+3. Server handles upload and on-chain store, then returns CID + tx hash
+4. Report appears in user dashboard/profile with chain timestamp
+5. Verify any time by uploading the same PDF on `/verify`
+
+Manual verification via curl:
+
+```bash
+curl -X POST http://localhost:3000/api/verifyReport \
+  -F file=@./my-report.pdf
+```
+
+Query reports for a wallet:
+
+```bash
+curl http://localhost:3000/api/reports/0xYourWalletAddress
+```
+
+# 🔗 Smart Contract Interaction Guide
+
+ABI excerpt (for reference):
+
+```json
+[
+  {
+    "type": "function",
+    "name": "storeReport",
+    "inputs": [{ "name": "_reportHash", "type": "string" }],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "verifyReport",
+    "inputs": [{ "name": "_reportHash", "type": "string" }],
+    "outputs": [{ "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "ReportStored",
+    "inputs": [
+      { "name": "reportHash", "type": "string", "indexed": true },
+      { "name": "timestamp", "type": "uint256", "indexed": false }
+    ]
+  }
+]
+```
+
+Quick script (ethers v6) to read a hash:
+
+```ts
+import { JsonRpcProvider, Contract } from "ethers";
+
+const provider = new JsonRpcProvider(process.env.AVALANCHE_RPC_URL!);
+const abi = ["function verifyReport(string) view returns (uint256)"];
+const contract = new Contract(
+  process.env.AVALANCHE_CONTRACT_ADDRESS!,
+  abi,
+  provider
+);
+
+const ts = await contract.verifyReport("<sha256-hex>");
+console.log(Number(ts));
+```
+
+# 🧪 Testing
+
+- Unit test hashing utilities in `src/lib/web3.ts`
+- Use a small set of fixture PDFs to validate end-to-end flow in dev
+- Contract tests: run `scripts/check-contract.js` against a local or testnet RPC
+
+# 🛠️ Troubleshooting
+
+- **Deployment fails with missing env**: ensure `.env.local` provides `AVALANCHE_RPC_URL`, `AVALANCHE_CONTRACT_ADDRESS`, and Pinata credentials.
+- **window.ethereum type errors during build**: see `src/context/web3Context.tsx` for EIP-1193 provider typing.
+- **Report not found on chain**: Verify the computed SHA-256 matches the stored one. Even minor PDF changes alter the hash.
+- **Pinata upload errors**: Check JWT/API keys and ensure file sizes are within Pinata limits.
+- **CORS or gateway access**: Prefer your dedicated `PINATA_GATEWAY` subdomain.
+
+# ❓ FAQ
+
+- **What exactly is stored on-chain?**
+  Only the SHA-256 hash (a fixed-length fingerprint). No raw content or PII is written to the blockchain.
+
+- **Can I verify without a wallet?**
+  Yes. Verification is a read-only chain query handled by the server.
+
+- **Do I need AVAX to verify?**
+  No. Only write operations consume gas. Reads are free via the RPC provider.
+
+- **What happens if my PDF changes slightly?**
+  The hash changes completely, so verification will fail. Re-generate and store again to create a new on-chain record.
+
+# 📖 Glossary
+
+- **IPFS** — InterPlanetary File System, content-addressed storage
+- **CID** — Content Identifier (hash of content + multicodec info)
+- **EIP-1193** — Ethereum provider standard (e.g., `window.ethereum`)
+- **C-Chain** — Avalanche EVM-compatible chain
+
+# 🗺️ Roadmap
+
+- Role-based access for organizational reports
+- Encrypted, client-side generated PDFs
+- Batch verification and bulk exports
+- Walletless login via email magic links
+- On-chain merkle batching to reduce gas
+
+# 🧹 Maintenance
+
+- Keep dependencies updated; see `package.json`
+- Re-run `npm run lint` before commits
+- Prefer server-side secrets; never expose private keys to the client
+
 ## 📧 Contact
 
 Senapati484 - [@sayan4.vercel.app](https://sayan4.vercel.app) - sayansenapati2544@gmail.com

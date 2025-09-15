@@ -338,7 +338,7 @@ void main() {
                 if (mouseDampening <= 0) {
                     uniforms.iMouse.value = [x, y];
                 }
-            } catch (e) {
+            } catch {
                 // ignore
             }
         };

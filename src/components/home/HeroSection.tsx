@@ -22,14 +22,14 @@ const HeroSection = () => {
           </div>
 
           <h1 className="text-4xl font-bold tracking-tight sm:text-6xl md:text-7xl lg:text-8xl bg-clip-text text-transparent bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300">
-            Supercharge Your <br />
-            <span className="text-white">Website&apos;s Performance</span>
+            Decentralized SEO <br />
+            <span className="text-white">Verification with Web3</span>
           </h1>
 
           <p className="max-w-3xl mx-auto mt-6 text-lg leading-8 text-white/90">
-            Get instant, comprehensive SEO insights and boost your
-            website&apos;s visibility with our advanced AI-powered analysis. No
-            technical skills required.
+            seo.ai generates SEO reports, stores them immutably on IPFS, and
+            verifies authenticity on the Avalanche blockchain — ensuring trust,
+            transparency, and permanence.
           </p>
 
           <div className="flex flex-col items-center justify-center gap-4 mt-10 sm:flex-row">
@@ -37,13 +37,13 @@ const HeroSection = () => {
               onClick={() => router.push("/generate")}
               className="px-8 py-6 text-lg font-semibold text-white transition-all duration-300 bg-blue-600 rounded-full hover:bg-blue-700 hover:scale-105"
             >
-              Analyze Your Website Now
+              Generate Report 🚀
             </Button>
             <Button
-              variant="outline"
-              className="px-8 py-6 text-lg font-semibold text-white transition-all duration-300 border-2 border-white/20 rounded-full hover:bg-white/10 hover:scale-105"
+              onClick={() => router.push("/verify")}
+              className="px-8 py-6 text-lg font-semibold transition-all duration-300 border-2 border-white/20 rounded-full bg-white/10 hover:scale-105"
             >
-              Watch Demo
+              Verify Report 🔒
             </Button>
           </div>
         </motion.div>

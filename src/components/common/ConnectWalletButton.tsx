@@ -19,7 +19,7 @@ export function ConnectWalletButton() {
         <Button
           onClick={disconnectWallet}
           variant="outline"
-          className="border-2 border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none transition-all"
+          className="border-2 border-border text-black shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none transition-all"
         >
           Disconnect
         </Button>

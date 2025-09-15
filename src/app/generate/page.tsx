@@ -14,9 +14,9 @@ interface ReportData {
 }
 
 interface GeminiResponse {
-  issues: Array<{ 
-    description: string; 
-    severity: 'low' | 'medium' | 'high' 
+  issues: Array<{
+    description: string;
+    severity: "low" | "medium" | "high";
   }>;
   modifications: string[];
   insights: string[];
@@ -39,7 +39,9 @@ export default function SEOAnalyzer() {
   const [error, setError] = useState("");
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [showReport, setShowReport] = useState(false);
-  const [geminiResponse, setGeminiResponse] = useState<GeminiResponse | null>(null);
+  const [geminiResponse, setGeminiResponse] = useState<GeminiResponse | null>(
+    null
+  );
   const [geminiLoading, setGeminiLoading] = useState(false);
   const [geminiError, setGeminiError] = useState("");
 
@@ -243,28 +245,29 @@ export default function SEOAnalyzer() {
       console.error("PDF generation can only run in the browser");
       return;
     }
-    
+
     if (!reportData) {
       console.error("No report data available for PDF generation");
       setPdfError("No report data available. Please analyze a URL first.");
       return;
     }
-    
+
     console.log("Starting PDF generation with data:", reportData);
     setIsGeneratingPDF(true);
     setPdfError("");
-    
+
     try {
       const result = await generatePDF(reportData);
       console.log("PDF generated successfully:", result);
-      
+
       if (result?.hash) {
         console.log("PDF Hash:", result.hash);
         // You can store this hash in state or use it as needed
       }
     } catch (error: unknown) {
       console.error("Failed to generate PDF:", error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       setPdfError(`Failed to generate PDF: ${errorMessage}`);
     } finally {
       setIsGeneratingPDF(false);
@@ -280,11 +283,11 @@ export default function SEOAnalyzer() {
 
     try {
       if (!reportData) {
-        throw new Error('No report data available');
+        throw new Error("No report data available");
       }
-      
+
       const { url: reportUrl, calculatedScores, ...restData } = reportData;
-      
+
       const response = await fetch("/api/gemini", {
         method: "POST",
         headers: {
@@ -293,30 +296,34 @@ export default function SEOAnalyzer() {
         body: JSON.stringify({
           url: reportUrl,
           calculatedScores,
-          ...restData
+          ...restData,
         }),
       });
 
       const data = await response.json();
-      console.log('Gemini API response:', data);
-      
+      console.log("Gemini API response:", data);
+
       if (!response.ok || !data.success) {
-        throw new Error(data.error || `API request failed with status ${response.status}`);
+        throw new Error(
+          data.error || `API request failed with status ${response.status}`
+        );
       }
 
       // Validate and transform the response data
       if (!data.data) {
-        throw new Error('No data in response');
+        throw new Error("No data in response");
       }
 
       // Ensure all required arrays exist and are arrays
       const transformedData: GeminiResponse = {
         issues: Array.isArray(data.data.issues) ? data.data.issues : [],
-        modifications: Array.isArray(data.data.modifications) ? data.data.modifications : [],
-        insights: Array.isArray(data.data.insights) ? data.data.insights : []
+        modifications: Array.isArray(data.data.modifications)
+          ? data.data.modifications
+          : [],
+        insights: Array.isArray(data.data.insights) ? data.data.insights : [],
       };
 
-      console.log('Transformed Gemini response:', transformedData);
+      console.log("Transformed Gemini response:", transformedData);
       setGeminiResponse(transformedData);
       setGeminiError("");
     } catch (error: unknown) {
@@ -361,7 +368,7 @@ export default function SEOAnalyzer() {
 
   return (
     <div className="min-h-screen py-12 px-4 top-20 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto bg-white/80 py-10 backdrop-blur-xl rounded-lg shadow-lg mt-20">
+      <div className="max-w-7xl mx-auto bg-white/70 backdrop-blur py-10 rounded-lg shadow-lg mt-20">
         <div className="text-center mb-8 p-6">
           <h1 className="text-5xl font-extrabold text-gray-900 mb-4">
             🚀 Comprehensive SEO Report Generator
@@ -457,10 +464,10 @@ export default function SEOAnalyzer() {
                     onClick={generatePDFReport}
                     disabled={isGeneratingPDF}
                     className={`bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium ${
-                      isGeneratingPDF ? 'opacity-75 cursor-not-allowed' : ''
+                      isGeneratingPDF ? "opacity-75 cursor-not-allowed" : ""
                     }`}
                   >
-                    {isGeneratingPDF ? '🔄 Generating...' : '📄 Download PDF'}
+                    {isGeneratingPDF ? "🔄 Generating..." : "📄 Download PDF"}
                   </button>
                   {pdfError && (
                     <p className="text-red-600 text-xs mt-1">{pdfError}</p>
@@ -684,7 +691,7 @@ export default function SEOAnalyzer() {
                   </h4>
                   <div className="space-y-2">
                     {reportData.keywords.bestPerformingKeywords.map(
-                      (keyword, index) => (
+                      (keyword: any, index: any) => (
                         <div
                           key={index}
                           className="flex justify-between items-center bg-white p-2 rounded"
@@ -756,7 +763,7 @@ export default function SEOAnalyzer() {
                   <div className="space-y-2">
                     {reportData.backlinks.topReferringDomains
                       .slice(0, 5)
-                      .map((domain, index) => (
+                      .map((domain: any, index: any) => (
                         <div
                           key={index}
                           className="flex justify-between items-center bg-white p-2 rounded"
@@ -977,24 +984,24 @@ export default function SEOAnalyzer() {
                       🚨 Critical Issues
                     </h4>
                     <ul className="space-y-2">
-                      {geminiResponse.issues.map(
-                        (issue, index) => (
-                          <li key={index} className="bg-white p-3 rounded-lg">
-                            <span
-                              className={`inline-block px-2 py-1 rounded text-xs font-medium mr-2 ${
-                                issue.severity === "high"
-                                  ? "bg-red-100 text-red-800"
-                                  : issue.severity === "medium"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-blue-100 text-blue-800"
-                              }`}
-                            >
-                              {issue.severity?.toUpperCase() || 'UNKNOWN'}
-                            </span>
-                            <span className="whitespace-pre-wrap">{issue.description}</span>
-                          </li>
-                        )
-                      )}
+                      {geminiResponse.issues.map((issue, index) => (
+                        <li key={index} className="bg-white p-3 rounded-lg">
+                          <span
+                            className={`inline-block px-2 py-1 rounded text-xs font-medium mr-2 ${
+                              issue.severity === "high"
+                                ? "bg-red-100 text-red-800"
+                                : issue.severity === "medium"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}
+                          >
+                            {issue.severity?.toUpperCase() || "UNKNOWN"}
+                          </span>
+                          <span className="whitespace-pre-wrap">
+                            {issue.description}
+                          </span>
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 ) : (
@@ -1003,44 +1010,52 @@ export default function SEOAnalyzer() {
                   </div>
                 )}
 
-                {geminiResponse.modifications && geminiResponse.modifications.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="text-lg font-semibold text-blue-800 mb-2">
-                      🔧 Recommended Modifications
-                    </h4>
-                    <ol className="list-decimal list-inside space-y-2">
-                      {geminiResponse.modifications.map((mod, index) => (
-                        <li key={index} className="bg-white p-3 rounded-lg">
-                          <div 
-                            className="prose max-w-none"
-                            dangerouslySetInnerHTML={{
-                              __html: mod.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                       .replace(/\n/g, '<br />')
-                            }}
-                          />
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
+                {geminiResponse.modifications &&
+                  geminiResponse.modifications.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="text-lg font-semibold text-blue-800 mb-2">
+                        🔧 Recommended Modifications
+                      </h4>
+                      <ol className="list-decimal list-inside space-y-2">
+                        {geminiResponse.modifications.map((mod, index) => (
+                          <li key={index} className="bg-white p-3 rounded-lg">
+                            <div
+                              className="prose max-w-none"
+                              dangerouslySetInnerHTML={{
+                                __html: mod
+                                  .replace(
+                                    /\*\*(.*?)\*\*/g,
+                                    "<strong>$1</strong>"
+                                  )
+                                  .replace(/\n/g, "<br />"),
+                              }}
+                            />
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
 
-                {geminiResponse.insights && geminiResponse.insights.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-blue-800 mb-2">
-                      💡 Insights & Opportunities
-                    </h4>
-                    <ul className="space-y-2">
-                      {geminiResponse.insights.map((insight, index) => (
-                        <li key={index} className="bg-white p-3 rounded-lg">
-                          <div className="flex items-start">
-                            <span className="mr-2">✨</span>
-                            <span className="whitespace-pre-wrap">{insight}</span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                {geminiResponse.insights &&
+                  geminiResponse.insights.length > 0 && (
+                    <div>
+                      <h4 className="text-lg font-semibold text-blue-800 mb-2">
+                        💡 Insights & Opportunities
+                      </h4>
+                      <ul className="space-y-2">
+                        {geminiResponse.insights.map((insight, index) => (
+                          <li key={index} className="bg-white p-3 rounded-lg">
+                            <div className="flex items-start">
+                              <span className="mr-2">✨</span>
+                              <span className="whitespace-pre-wrap">
+                                {insight}
+                              </span>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
               </div>
             )}
           </div>

@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import { ethers } from "ethers";
 
 // Make a SHA-256 hash of the report string
 function generateReportHash(report: string) {

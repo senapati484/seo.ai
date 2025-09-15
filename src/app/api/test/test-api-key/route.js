@@ -100,7 +100,7 @@ export async function GET() {
           (test) => test.success && test.hasRequestedCategory
         ).length,
         issues: Object.entries(categoryTests)
-          .filter(([cat, test]) => !test.success || !test.hasRequestedCategory)
+          .filter(([, test]) => !test.success || !test.hasRequestedCategory)
           .map(([cat, test]) => `${cat}: ${test.error || "not found"}`),
       },
     });

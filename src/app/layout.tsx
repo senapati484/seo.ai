@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NavbarSeo } from "@/components/common/Navbar";
 import GradientBlinds from "@/components/ui/GradientBlinds";
-import { ClerkProvider } from "@clerk/nextjs";
 import Footer from "@/components/common/Footer";
 import { Web3Provider } from "@/context/web3Context";
 
@@ -31,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen `}
         cz-shortcut-listen="true"
       >
         <Web3Provider>

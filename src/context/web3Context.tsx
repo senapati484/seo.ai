@@ -5,6 +5,17 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { Web3Wallet, Web3WalletSchema } from "@/schemas/web3";
 
+// Minimal EIP-1193 provider interface
+interface Eip1193Provider {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+}
+
+declare global {
+  interface Window {
+    ethereum?: Eip1193Provider;
+  }
+}
+
 interface Web3ContextType {
   wallet: Web3Wallet | null;
   connectWallet: () => Promise<void>;
@@ -34,15 +45,15 @@ export function Web3Provider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const connectWallet = async () => {
-    if (typeof window.ethereum === "undefined") {
+    if (typeof window === "undefined" || typeof window.ethereum === "undefined") {
       alert("Please install MetaMask!");
       return;
     }
 
     setIsLoading(true);
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const accounts = await provider.send("eth_requestAccounts", []);
+      const provider = new ethers.BrowserProvider(window.ethereum as Eip1193Provider);
+      await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();
       const address = await signer.getAddress();
       const balanceWei = await provider.getBalance(address);

@@ -10,8 +10,7 @@ const Footer = () => {
       { name: "About", href: "/about" },
       { name: "Pricing", href: "/pricing" },
       { name: "Generate", href: "/generate" },
-      { name: "Blog", href: "#" },
-      { name: "Documentation", href: "#" },
+      { name: "Verify", href: "/verify" },
     ],
     social: [
       {
@@ -49,7 +48,7 @@ const Footer = () => {
                 href={item.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white/70 hover:text-white transition-colors duration-200"
+                className="text-white/70 font-bold cursor-pointer hover:scale-110 hover:text-white transition-colors duration-200"
               >
                 <span className="sr-only">{item.name}</span>
                 <item.icon className="h-6 w-6" aria-hidden="true" />
@@ -57,15 +56,15 @@ const Footer = () => {
             ))}
           </div>
           <div className="mt-8 md:order-1 md:mt-0">
-            <p className="text-center text-sm leading-5 text-white/80">
+            <p className="text-center font-bold text-lg leading-5 text-white/80">
               &copy; {currentYear} seo.ai — All rights reserved.
             </p>
-            <nav className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
+            <nav className="mt-4 flex font-bold flex-wrap justify-center gap-x-6 gap-y-2 text-2xl">
               {navigation.main.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-white/70 hover:text-white transition-colors duration-200"
+                  className="text-white/70 font-bold hover:text-white transition-colors duration-200"
                 >
                   {item.name}
                 </Link>
@@ -74,7 +73,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="my-8 border-t border-white/10 pt-8 md:flex md:items-center md:justify-center">
-          <p className="text-center text-xs leading-5 text-white/60">
+          <p className="text-center text-lg leading-5 text-white/60">
             Made with ❤️ by{" "}
             <a
               href="https://github.com/senapati484"

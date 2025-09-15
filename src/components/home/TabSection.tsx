@@ -10,15 +10,13 @@ export function TabSection() {
         titleComponent={
           <>
             <h1 className="text-4xl font-bold text-black md:text-[5rem]">
-              Make your website
-              <br />
-              <span className="text-4xl font-bold leading-none md:text-[5rem]">
-                an unforgettable experience
-              </span>
+              How seo.ai Works
             </h1>
             <p className="mt-4 max-w-2xl text-base text-neutral-600 dark:text-neutral-300">
-              Create stunning landing pages, modern animations and effects that
-              keep your users engaged. With our tools, its easier than ever.
+              From analysis to verification: submit a URL, extract SEO metrics,
+              generate a verifiable PDF, and store the hash immutably on IPFS
+              and Avalanche C-Chain. Anyone can verify your report with
+              cryptographic certainty.
             </p>
           </>
         }

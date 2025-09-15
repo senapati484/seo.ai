@@ -10,13 +10,13 @@ const Page = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto py-6 mt-20 sm:px-6 lg:px-8 bg-gray-50/60 backdrop-blur-2xl rounded-2xl p-4">
+      <div className="max-w-7xl mx-auto py-6 my-20 sm:px-6 lg:px-8 bg-gray-50/60 backdrop-blur-2xl rounded-2xl p-4">
         <div className="px-4 py-6 sm:px-0">
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
               <button
                 onClick={() => setActiveTab("reports")}
-                className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${
+                className={`whitespace-nowrap pb-4 px-1 border-b-2 font-bold text-lg ${
                   activeTab === "reports"
                     ? "border-blue-500 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"

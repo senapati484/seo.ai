@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Zap, Sparkles, Lock, Cpu, Database } from "lucide-react";
+import { Check, Zap, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 

@@ -66,10 +66,14 @@ export async function GET() {
             },
             rpc: process.env.AVALANCHE_RPC_URL
         });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Diagnostics error:', err);
+        const message =
+            err && typeof err === 'object' && 'message' in err
+                ? String((err as { message?: unknown }).message)
+                : 'Unknown error';
         return NextResponse.json(
-            { error: 'Diagnostics failed', details: err.message },
+            { error: 'Diagnostics failed', details: message },
             { status: 500 }
         );
     }
@@ -162,15 +166,28 @@ export async function POST(req: NextRequest) {
             hash,
             network: await provider.getNetwork()
         });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Verification error:', err);
+
+        const message =
+            err && typeof err === 'object' && 'message' in err
+                ? String((err as { message?: unknown }).message)
+                : 'Unknown error';
+        const reason =
+            err && typeof err === 'object' && 'reason' in err
+                ? String((err as { reason?: unknown }).reason)
+                : undefined;
+        const code =
+            err && typeof err === 'object' && 'code' in err
+                ? String((err as { code?: unknown }).code)
+                : undefined;
 
         return NextResponse.json(
             {
                 error: 'Verification failed',
-                details: err.message,
-                ...(err.reason && { reason: err.reason }),
-                ...(err.code && { code: err.code })
+                details: message,
+                ...(reason && { reason }),
+                ...(code && { code })
             },
             { status: 500 }
         );

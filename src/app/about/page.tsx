@@ -9,45 +9,54 @@ const AboutPage = () => {
 
   const features = [
     {
-      title: "AI-Powered Analysis",
+      title: "SEO Analysis",
       description:
-        "Advanced algorithms analyze your website with precision, giving you actionable insights in seconds.",
-      icon: "🤖",
-    },
-    {
-      title: "Real-time Reports",
-      description:
-        "Instant, beautiful reports to help you improve your site performance right away.",
+        "Generate detailed SEO reports for any URL, capturing critical metrics with AI-driven insights.",
       icon: "📊",
     },
     {
-      title: "User-Friendly Interface",
+      title: "Decentralized Storage",
       description:
-        "Built for everyone — from SEO beginners to marketing experts.",
-      icon: "✨",
+        "Reports stored on IPFS via Pinata ensure immutability and security.",
+      icon: "🗂️",
     },
     {
-      title: "Continuous Monitoring",
-      description: "Stay on top of changes with automatic updates and alerts.",
-      icon: "🔍",
+      title: "Blockchain Verification",
+      description:
+        "Immutable proof of SEO reports stored on the Avalanche C-Chain.",
+      icon: "⛓️",
+    },
+    {
+      title: "Web3 Authentication",
+      description:
+        "Seamless wallet connection via MetaMask for secure and transparent interactions.",
+      icon: "🔑",
     },
   ];
 
-  const team = [
+  const workflowSteps = [
+    "Submit URL for SEO analysis",
+    "Extract critical metrics",
+    "Generate PDF & compute SHA-256 hash",
+    "Store on IPFS & Avalanche C-Chain",
+    "Verify authenticity via blockchain",
+  ];
+
+  const benefits = [
     {
-      name: "Alex Johnson",
-      role: "CEO & Founder",
-      bio: "10+ years in digital marketing and AI technology.",
+      problem: "Centralized Trust",
+      solution:
+        "Immutable records on Avalanche ensure tamper-proof verification.",
     },
     {
-      name: "Sarah Chen",
-      role: "Lead Developer",
-      bio: "Expert in machine learning and web technologies.",
+      problem: "Tamper Risk",
+      solution:
+        "SHA-256 hashing ensures even the smallest alteration is detected.",
     },
     {
-      name: "Michael Brown",
-      role: "SEO Specialist",
-      bio: "Helping businesses rank higher for over 8 years.",
+      problem: "Complex Verification",
+      solution:
+        "Anyone can independently verify authenticity — no gatekeepers.",
     },
   ];
 
@@ -61,45 +70,49 @@ const AboutPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          Supercharge Your{" "}
+          Decentralized{" "}
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-            SEO
-          </span>{" "}
-          with AI
+            SEO Verification
+          </span>
         </motion.h1>
         <motion.p
-          className="max-w-2xl mx-auto mb-10 text-xl text-gray-300"
+          className="max-w-3xl mx-auto mb-10 text-xl text-gray-300"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
         >
-          seo.ai helps you generate SEO reports, get AI-driven insights, and
-          understand exactly what changes improve your score.
+          Bringing trust and transparency to SEO analytics through Web3 —
+          immutable reports stored on IPFS and verified on the Avalanche
+          blockchain.
         </motion.p>
         <Button
           onClick={() => router.push("/generate")}
           className="px-10 py-6 text-lg font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-lg hover:scale-105 hover:shadow-purple-500/30 transition-all"
         >
-          Run Free SEO Analysis 🚀
+          Generate My SEO Report 🚀
         </Button>
       </section>
 
-      {/* Mission Section */}
+      {/* What is seo.ai */}
       <section className="py-20">
         <div className="max-w-4xl mx-auto text-center bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-10">
           <h2 className="mb-6 text-3xl font-bold text-white md:text-4xl">
-            Our Mission
+            What is seo.ai?
           </h2>
           <p className="text-lg text-gray-300">
-            At seo.ai, we believe every business deserves to be found online.
-            Our mission is to simplify SEO and make website analysis accessible
-            to everyone, regardless of their technical expertise.
+            seo.ai is a decentralized application designed to revolutionize SEO
+            reporting by adding a layer of irrefutable authenticity and
+            permanence. Every report is analyzed, hashed, stored on IPFS, and
+            immutably verified on the Avalanche C-Chain.
           </p>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 container mx-auto px-6">
+      {/* Features */}
+      <section className="py-20 max-w-7xl mx-auto">
+        <h2 className="mb-10 text-center text-3xl font-bold text-white md:text-4xl">
+          Key Features & Technologies
+        </h2>
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           {features.map((feature, index) => (
             <motion.div
@@ -122,37 +135,49 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="py-20 container mx-auto px-6">
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <h2 className="mb-4 text-3xl font-bold text-white md:text-4xl">
-            Meet Our Team
-          </h2>
-          <p className="text-gray-400">
-            Passionate experts dedicated to revolutionizing SEO analysis.
-          </p>
-        </div>
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {team.map((member, index) => (
+      {/* Workflow */}
+      <section className="py-20 max-w-5xl mx-auto text-center">
+        <h2 className="mb-8 text-3xl font-bold text-white md:text-4xl">
+          How It Works
+        </h2>
+        <div className="flex flex-col md:flex-row md:justify-center gap-6">
+          {workflowSteps.map((step, index) => (
             <motion.div
               key={index}
-              className="p-6 text-center bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 hover:shadow-lg hover:scale-105 transition-all"
+              className="flex-1 p-6 bg-white/5 rounded-2xl border border-white/10 text-white backdrop-blur-md"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
             >
-              <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-2xl text-white font-bold shadow-md">
-                {member.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </div>
-              <h3 className="text-xl font-semibold text-white">
-                {member.name}
+              <span className="text-xl font-bold text-blue-400">
+                Step {index + 1}
+              </span>
+              <p className="mt-2 text-gray-300">{step}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Blockchain Benefits */}
+      <section className="py-20 max-w-6xl mx-auto">
+        <h2 className="mb-10 text-center text-3xl font-bold text-white md:text-4xl">
+          Why Web3 Verification?
+        </h2>
+        <div className="grid gap-8 md:grid-cols-3">
+          {benefits.map((item, index) => (
+            <motion.div
+              key={index}
+              className="p-6 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-lg hover:scale-105 transition-all"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1, duration: 0.5 }}
+            >
+              <h3 className="text-xl font-semibold text-blue-400">
+                Problem: {item.problem}
               </h3>
-              <p className="mb-2 text-blue-400">{member.role}</p>
-              <p className="text-gray-400">{member.bio}</p>
+              <p className="mt-2 text-gray-300">{item.solution}</p>
             </motion.div>
           ))}
         </div>
@@ -160,22 +185,20 @@ const AboutPage = () => {
 
       {/* CTA Section */}
       <section className="py-20 relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 opacity-30 blur-2xl"></div>
         <div className="relative z-10 max-w-4xl mx-auto text-center px-6">
-          <div className="p-10 rounded-2xl bg-black/50 backdrop-blur-xl border border-white/10">
+          <div className="p-10 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10">
             <h2 className="mb-4 text-3xl font-bold text-white md:text-4xl">
-              Ready to improve your SEO score?
+              Ready to Verify Your SEO Reports?
             </h2>
             <p className="max-w-2xl mx-auto mb-8 text-gray-300">
-              Generate unlimited reports, get AI-powered recommendations, and
-              boost your search rankings with{" "}
-              <span className="text-blue-400 font-semibold">seo.ai</span>.
+              Start generating decentralized reports today and bring
+              transparency, trust, and permanence to your SEO analytics.
             </p>
             <Button
               onClick={() => router.push("/generate")}
               className="px-10 py-6 text-lg font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-lg hover:scale-105 hover:shadow-purple-500/30 transition-all"
             >
-              Get My SEO Report ⚡
+              Get Started ⚡
             </Button>
           </div>
         </div>

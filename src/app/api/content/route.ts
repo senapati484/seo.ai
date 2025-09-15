@@ -171,7 +171,7 @@ export async function GET(request: Request) {
           .map((script) => {
             try {
               return JSON.parse((script as HTMLElement).innerText);
-            } catch (e: any) {
+            } catch {
               return null;
             }
           })
@@ -361,7 +361,6 @@ export async function GET(request: Request) {
           // Heading structure (0-25 points)
           const hasH1 = headings.h1.length > 0;
           const hasH2 = headings.h2.length > 0;
-          const hasH3 = headings.h3.length > 0;
           if (hasH1 && hasH2) score += 25;
           else if (hasH1) score += 15;
           else if (hasH2) score += 10;
